@@ -18,6 +18,7 @@ contract ERC721 {
 
     string public name;
     string public symbol;
+    uint public id;
 
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
     event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
@@ -26,6 +27,24 @@ contract ERC721 {
     constructor(string memory _name, string memory _symbol) {
         name = _name;
         symbol = _symbol;
+    }
+
+    function mint(address _to, string memory _tokenURI) public  {
+        require(_to != address(0), "Invalid recipient");
+        require(tokenOwners[id] == address(0), "Token already exists");
+
+        id += 1;
+        tokenOwners[id] = _to;
+        balances[_to] += 1;
+        tokenURIs[id] = _tokenURI;
+
+        emit Transfer(address(0), _to, id);
+    }
+
+    function tokenURI(uint256 _tokenId) public view returns (string memory){
+        require(_tokenId > 0, "Invalid token ID");
+        require(tokenOwners[_tokenId] != address(0), "Token does not exist");
+        return tokenURIs[_tokenId];
     }
 
     function balanceOf(address _owner) external view returns (uint256){
