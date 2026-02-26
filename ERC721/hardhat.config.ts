@@ -9,6 +9,10 @@ const config: HardhatUserConfig = {
     sepolia: {
       url: "https://0xrpc.io/sep",
       accounts: [PRIVATE_KEY],
+    },
+    lisk_sepolia:{
+      url: "https://lisk-sepolia.drpc.org",
+      accounts: [PRIVATE_KEY]
     }
   }
 };
