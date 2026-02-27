@@ -11,7 +11,7 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
     },
     lisk_sepolia:{
-      url: "https://lisk-sepolia.drpc.org",
+      url: "https://rpc.sepolia-api.lisk.com",
       accounts: [PRIVATE_KEY]
     }
   }

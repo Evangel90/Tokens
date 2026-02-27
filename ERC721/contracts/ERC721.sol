@@ -29,23 +29,96 @@ contract ERC721 {
         symbol = _symbol;
     }
 
-    function mint(address _to, string memory _tokenURI) public  {
+    /// @notice Standard Base64 Encoding Logic
+    /// @dev Implementation of the Base64 encoding algorithm from scratch
+    function encode(bytes memory data) public pure returns (string memory) {
+        if (data.length == 0) return "";
+        
+        string memory table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        uint256 encodedLength = 4 * ((data.length + 2) / 3);
+        bytes memory result = new bytes(encodedLength);
+
+        for (uint256 i = 0; i < data.length; i += 3) {
+            uint256 input = uint256(uint8(data[i])) << 16;
+            if (i + 1 < data.length) input |= uint256(uint8(data[i + 1])) << 8;
+            if (i + 2 < data.length) input |= uint256(uint8(data[i + 2]));
+
+            result[(i / 3) * 4] = bytes(table)[(input >> 18) & 0x3F];
+            result[(i / 3) * 4 + 1] = bytes(table)[(input >> 12) & 0x3F];
+            result[(i / 3) * 4 + 2] = (i + 1 < data.length) ? bytes(table)[(input >> 6) & 0x3F] : bytes1("=");
+            result[(i / 3) * 4 + 3] = (i + 2 < data.length) ? bytes(table)[input & 0x3F] : bytes1("=");
+        }
+        return string(result);
+    }
+
+    /// @notice Generates the SVG image string
+    function buildImage(uint256 tokenId) public pure returns (string memory) {
+        // A simple SVG: A square with the Token ID text
+        return string(abi.encodePacked(
+            "<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>",
+            "<rect width='100%' height='100%' fill='#2c3e50'/>",
+            "<text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='40'>NFT #",
+            uint2str(tokenId),
+            "</text></svg>"
+        ));
+    }
+
+    // Helper: Convert uint to string
+    function uint2str(uint256 _i) internal pure returns (string memory) {
+        if (_i == 0) return "0";
+        uint256 j = _i;
+        uint256 length;
+        while (j != 0) {
+            length++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(length);
+        uint256 k = length;
+        while (_i != 0) {
+            bstr[--k] = bytes1(uint8(48 + (_i % 10)));
+            _i /= 10;
+        }
+        return string(bstr);
+    }
+
+    function mint(address _to) public  {
+        id += 1;
         require(_to != address(0), "Invalid recipient");
         require(tokenOwners[id] == address(0), "Token already exists");
 
-        id += 1;
         tokenOwners[id] = _to;
         balances[_to] += 1;
-        tokenURIs[id] = _tokenURI;
+        tokenURIs[id] = tokenURI(id);
 
         emit Transfer(address(0), _to, id);
     }
 
-    function tokenURI(uint256 _tokenId) public view returns (string memory){
-        require(_tokenId > 0, "Invalid token ID");
-        require(tokenOwners[_tokenId] != address(0), "Token does not exist");
-        return tokenURIs[_tokenId];
+    /// @notice The ERC-721 tokenURI function
+    function tokenURI(uint256 tokenId) public view returns (string memory) {
+        require(tokenId > 0, "Invalid token ID");
+        require(tokenOwners[tokenId] != address(0), "Token does not exist");
+
+        string memory imageSvg = buildImage(tokenId);
+        
+        // Encode image to base64
+        string memory imageBase64 = encode(bytes(imageSvg));
+        
+        // Construct JSON metadata
+        string memory json = string(abi.encodePacked(
+            '{"name": "On-Chain Token #', uint2str(tokenId), 
+            '", "description": "Truly on-chain SVG", "image": "data:image/svg+xml;base64,', 
+            imageBase64, '"}'
+        ));
+
+        // Return Data URI
+        return string(abi.encodePacked("data:application/json;base64,", encode(bytes(json))));
     }
+
+    // function tokenURI(uint256 _tokenId) public view returns (string memory){
+    //     require(_tokenId > 0, "Invalid token ID");
+    //     require(tokenOwners[_tokenId] != address(0), "Token does not exist");
+    //     return tokenURIs[_tokenId];
+    // }
 
     function balanceOf(address _owner) external view returns (uint256){
         require(_owner != address(0), "Invalid owner");
