@@ -4,6 +4,7 @@ use sui::package::{Self, Publisher};
 use sui::display;
 use sui::event;
 use sui::table::{Self, Table};
+use std::string::String;
 
 public struct ERC721Token has key, store{
     id: UID,
@@ -70,10 +71,10 @@ fun init(otw: ERC721, ctx: &mut TxContext){
 
 
 public fun mint_token(
-    name: vector<u8>,
+    name: String,
     collection_id: u64,
-    image_url: vector<u8>,
-    description: vector<u8>,
+    image_url: String,
+    description: String,
     recipient: address,
     token_info: &mut ERC721_Info,
     ctx: &mut TxContext
@@ -81,9 +82,9 @@ public fun mint_token(
     let token =  ERC721Token {
         id: object::new(ctx),
         collection_id,
-        name,
-        image_url,
-        description
+        name: name.into_bytes(),
+        image_url: image_url.into_bytes(),
+        description: description.into_bytes()
     };
 
     if(!token_info.balances.contains(recipient)){
