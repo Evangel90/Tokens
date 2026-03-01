@@ -68,31 +68,16 @@ fun init(otw: ERC721, ctx: &mut TxContext){
     transfer::public_transfer(display, ctx.sender());
 }
 
-public fun update_token_info(
-    _: &Only_Owner, 
-    token: &ERC721Token,
-    token_onwer: address,
-    token_info: &mut ERC721_Info,
-    balances: &mut Table<address, u64>,
-    tokenOwners: &mut Table<ID, address>,
-    // ctx: &mut TxContext
-){
-    let token_count = token_info.total_supply + 1;
-
-    balances.add(token_onwer, token_count);
-    tokenOwners.add(object::id(token), token_onwer);
-    
-    token_info.total_supply = token_count;
-
-}
 
 public fun mint_token(
     name: vector<u8>,
     collection_id: u64,
     image_url: vector<u8>,
     description: vector<u8>,
+    recipient: address,
+    token_info: &mut ERC721_Info,
     ctx: &mut TxContext
-): ERC721Token {
+) {
     let token =  ERC721Token {
         id: object::new(ctx),
         collection_id,
@@ -101,12 +86,22 @@ public fun mint_token(
         description
     };
 
+    if(!token_info.balances.contains(recipient)){
+        token_info.balances.add(recipient, 1);
+    }else{
+        let balance = &mut token_info.balances[recipient];
+        *balance = *balance + 1;
+    };
+
+    token_info.tokenOwners.add(object::id(&token), recipient);
+    token_info.total_supply = token_info.total_supply + 1;
+
     event::emit(ERC721Token_Minted {
         token_id: object::id(&token),
         token_name: token.name,
     });
 
-    token
+    transfer::public_transfer(token, recipient);
 }
 
 
