@@ -1,4 +1,4 @@
-module erc721_sui::ERC721;
+module ERC721_SUI::ERC721;
 
 use sui::package::{Self, Publisher};
 use sui::display;
@@ -107,4 +107,4 @@ public fun mint_token(
 
 
 
-//PS: After basic implementation, turn this into something another dev can use as library for deploying their own NFT collection on SUI.
+//PS: After basic implementation, turn this into something another dev can use as template for deploying their own NFT collection on SUI.
